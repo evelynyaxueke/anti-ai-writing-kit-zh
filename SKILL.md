@@ -1,6 +1,6 @@
 ---
 name: anti-ai-writing-kit-zh
-description: "Write, edit, rewrite, polish, or review Simplified Chinese prose without common AI-writing tells. Use for Chinese articles, posts, scripts, emails, captions, page copy, product copy, or professional text. Open SKILL.md at the exact registered path, read through its EOF marker, load the active rules, and run the final gate before delivering prose. Also use to load, customize, reset, maintain, or add rules to the Chinese Anti-AI Writing Kit."
+description: "Write, edit, rewrite, polish, or review Simplified Chinese prose without common AI-writing tells. Use for Chinese articles, posts, scripts, emails, captions, page copy, product copy, or professional text. Open SKILL.md at the exact registered path, read through its EOF marker, load the active rules, and run the final gate before delivering prose. Also use to load, customize, reset, maintain, or add rules to the Chinese Anti-AI Writing Kit, and when a user complains about a Chinese AI-writing habit during an active writing session."
 ---
 
 # 中文去 AI 味写作规则
@@ -18,7 +18,7 @@ description: "Write, edit, rewrite, polish, or review Simplified Chinese prose w
 7. 不要覆盖或静默迁移已有定制文件。
 8. 定制不能删除加载流程、事实保真、交付检查、语义检查或只发送成稿的要求。
 
-用户只调用 skill，要求加载、定制、重置、维护、添加规则，或询问某个表达是否有 AI 味时，读完 `operations/kit-operations.md`，直到 operations EOF，并按其中流程执行。
+用户只调用 skill，要求加载、定制、重置、维护、添加规则，询问某个表达是否有 AI 味，或在本技能已启用的写作对话中抱怨、讨厌、指出某种 AI 味习惯时，读完 `operations/kit-operations.md`，直到 operations EOF，并按其中流程执行。
 
 操作流程中的固定回复和确认问题不是中文成稿或修改稿。按 operations 原文发送，不运行成稿交付检查，也不因写作规则删改其中措辞。
 

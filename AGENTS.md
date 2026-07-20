@@ -40,7 +40,7 @@ Before adding a rule, search `SKILL.md`, the scanner, and tests for the exact ph
 
 Keep rules short and actionable. State what to do instead. Check that cleanup does not make Chinese prose stiff, over-oral, vague, or artificially rough.
 
-Keep personal preferences in `skill-customized.md` unless the user explicitly requests a public default change.
+Send every normal add-rule, remember-rule, or save-rule request to `skill-customized.md`. Do not offer users a choice between the customized file and `SKILL.md`. Treat a deliberate change to the repository's shipped defaults as maintainer work with its own validation and release.
 
 ## Verification
 

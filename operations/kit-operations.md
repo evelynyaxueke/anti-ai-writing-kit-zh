@@ -56,22 +56,19 @@ Create one only when the user asks to customize or explicitly asks to save a per
 
 ## Add a rule or preference
 
-Use this when the user asks to add, remember, save, or update a writing rule, or clearly wants a concrete complaint remembered.
+Use this when the user asks to add, remember, save, or update a writing rule. A direct request is confirmation to save it.
 
-If the user only asks whether wording has AI smell, answer first, then end the same reply with this exact question: `要我把这个加成一条规则吗？` Do not edit any file before the user confirms and chooses a target.
+If the user complains about, dislikes, points out, or asks about an AI-writing habit without asking to save it, acknowledge or answer first, then ask exactly: `要我把这个加成一条规则吗？` Do not save the complaint or edit any file without confirmation.
 
-### Choose the target
+Every rule added during normal use goes to `skill-customized.md`. Do not offer `SKILL.md` as a second target and do not ask the user to choose between personal and default rules. If the customized file is missing, create the compact customized file first.
 
-- `默认`、`公共版本`、`核心规则`、`SKILL.md`、`给所有人` means the default skill.
-- `我的规则`、`个人版本`、`定制版`、`skill-customized.md` means the custom file.
-- If unclear, ask: `要加到你的个人定制文件，还是默认 SKILL.md？`
-- If the personal target is missing, create the compact customized file first.
+A direct request to maintain the published repository's shipped defaults is a repository-maintenance task outside this add-rule workflow. Handle it as a deliberate skill release with the applicable scripts, tests, and documentation.
 
 ### Search and place
 
-Before editing, search the target and supporting files for:
+Before editing, search `SKILL.md`, the existing customized file, and supporting files for:
 
-1. The exact phrase or example in `SKILL.md`.
+1. The exact phrase or example in `SKILL.md` or `skill-customized.md`.
 2. Close variants.
 3. The root failure.
 4. The nearest existing section.
@@ -91,13 +88,15 @@ Place a new rule in the smallest fitting section:
 
 Keep the operative rule short. Name the pattern, explain the failure, say what to do instead, and add an example only when needed.
 
-For a default change, update every applicable layer:
-
-- `SKILL.md` for the default rule, explanation, phrase list, and examples
-- `scripts/scan-writing.mjs` only when a safe exact or candidate check is possible
-- tests for changed script behavior
-
 After editing, report what changed and where.
+
+## Manual customization
+
+The user can delete unwanted numbered rules or add rough notes. A few words are enough. Never edit the controller through customization.
+
+- Add and change user preferences in `skill-customized.md`.
+- Treat changes to the published `SKILL.md` as repository maintenance, separate from personal customization.
+- Keep an existing legacy custom file as-is and edit it in place.
 
 ## Reset customization
 

@@ -15,14 +15,21 @@ test('normal load replies distinguish default and customized rules', () => {
   assert.match(operations, /已加载。没有找到定制文件，所以会使用 SKILL\.md 控制器和默认规则。请发送文章、主题或写作需求。/u);
 });
 
-test('question-only AI-smell checks require confirmation without editing', () => {
-  assert.match(skill, /询问某个表达是否有 AI 味时，读完 `operations\/kit-operations\.md`/u);
+test('AI-smell questions and complaints require confirmation without editing', () => {
+  assert.match(skill, /抱怨、讨厌、指出某种 AI 味习惯时，读完 `operations\/kit-operations\.md`/u);
   assert.match(operations, /要我把这个加成一条规则吗？/u);
-  assert.match(operations, /Do not edit any file before the user confirms and chooses a target/u);
+  assert.match(operations, /Do not save the complaint or edit any file without confirmation/u);
 });
 
-test('ambiguous rule additions require an explicit target', () => {
-  assert.match(operations, /要加到你的个人定制文件，还是默认 SKILL\.md？/u);
+test('normal rule additions use the customized file only', () => {
+  assert.match(operations, /Every rule added during normal use goes to `skill-customized\.md`/u);
+  assert.match(operations, /Do not offer `SKILL\.md` as a second target/u);
+  assert.match(operations, /If the customized file is missing, create the compact customized file first/u);
+  assert.doesNotMatch(operations, /要加到你的个人定制文件，还是默认 SKILL\.md？/u);
+  assert.match(readme, /正常使用时添加的每一条规则都写入 `skill-customized\.md`/u);
+  assert.match(readme, /使用“中文去 AI 味写作套件”。把这条加到我的规则/u);
+  assert.match(readme, /没有得到确认时，抱怨不会写入规则/u);
+  assert.doesNotMatch(readme, /加到默认 SKILL\.md/u);
 });
 
 test('reset replies and deletion scope are fixed', () => {
