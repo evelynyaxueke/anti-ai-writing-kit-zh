@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import {
   ACTIVE_RULES_MARKER,
@@ -16,6 +17,9 @@ import {
   runCli,
   splitActiveRules
 } from '../scripts/print-active-rules.mjs';
+
+const TEST_DIR = path.dirname(fileURLToPath(import.meta.url));
+const LIVE_SKILL_DIR = path.dirname(TEST_DIR);
 
 function fixture(t) {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'aaw-zh-rules-'));
@@ -41,6 +45,13 @@ test('custom template is a complete standalone skill', (t) => {
   for (let section = 1; section <= 8; section += 1) assert.match(output, new RegExp(`^## ${section}\\.`, 'mu'));
   assert.match(output, /维护路由/u);
   assert.ok(output.endsWith(`${SKILL_MARKER}\n`));
+});
+
+test('live SKILL creates a valid custom template when its instructions mention the format marker', () => {
+  const custom = buildCustomTemplate(LIVE_SKILL_DIR);
+  assert.match(custom, new RegExp(`^---\\n[\\s\\S]*?\\n---\\n${CUSTOM_FULL_FORMAT_MARKER}$`, 'mu'));
+  assert.ok(custom.endsWith(`${SKILL_MARKER}\n`));
+  assert.equal(custom.split(/\r?\n/u).filter((line) => line.trim() === CUSTOM_FULL_FORMAT_MARKER).length, 1);
 });
 
 test('standalone customized skill is the only active source', (t) => {
