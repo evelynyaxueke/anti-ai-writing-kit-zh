@@ -11,8 +11,9 @@ const readme = fs.readFileSync(path.join(SKILL_DIR, 'README.md'), 'utf8');
 const agents = fs.readFileSync(path.join(SKILL_DIR, 'AGENTS.md'), 'utf8');
 
 test('normal load replies distinguish default and customized rules', () => {
-  assert.match(operations, /已加载。本次会使用 SKILL\.md 控制器和你的定制规则。请发送文章、主题或写作需求。/u);
-  assert.match(operations, /已加载。没有找到定制文件，所以会使用 SKILL\.md 控制器和默认规则。请发送文章、主题或写作需求。/u);
+  assert.match(operations, /已加载。本次会使用完整的 skill-customized\.md。请发送文章、主题或写作需求。/u);
+  assert.match(operations, /已加载。本次会使用默认操作流程和你的定制规则。请发送文章、主题或写作需求。/u);
+  assert.match(operations, /已加载。没有找到定制文件，所以会使用默认 SKILL\.md。请发送文章、主题或写作需求。/u);
 });
 
 test('AI-smell questions and complaints require confirmation without editing', () => {
@@ -24,7 +25,7 @@ test('AI-smell questions and complaints require confirmation without editing', (
 test('normal rule additions use the customized file only', () => {
   assert.match(operations, /Every rule added during normal use goes to `skill-customized\.md`/u);
   assert.match(operations, /Do not offer `SKILL\.md` as a second target/u);
-  assert.match(operations, /If the customized file is missing, create the compact customized file first/u);
+  assert.match(operations, /If the customized file is missing, create the standalone customized skill first/u);
   assert.doesNotMatch(operations, /要加到你的个人定制文件，还是默认 SKILL\.md？/u);
   assert.match(readme, /正常使用时添加的每一条规则都写入 `skill-customized\.md`/u);
   assert.match(readme, /使用“中文去 AI 味写作套件”。把这条加到我的规则/u);
@@ -34,8 +35,8 @@ test('normal rule additions use the customized file only', () => {
 
 test('reset replies and deletion scope are fixed', () => {
   assert.match(operations, /Delete only `skill-customized\.md`/u);
-  assert.match(operations, /重置完成。我删除了 skill-customized\.md。除非你再次定制，否则会使用 SKILL\.md 控制器和默认规则。/u);
-  assert.match(operations, /没有找到定制文件。现在已经在使用 SKILL\.md 控制器和默认规则。/u);
+  assert.match(operations, /重置完成。我删除了 skill-customized\.md。除非你再次定制，否则会使用默认 SKILL\.md。/u);
+  assert.match(operations, /没有找到定制文件。现在已经在使用默认 SKILL\.md。/u);
 });
 
 test('operational messages are exempt from prose cleanup', () => {
@@ -55,7 +56,8 @@ test('guided customization contains all fixed interaction points', () => {
 
 test('public rules and examples have one source of truth', () => {
   assert.match(skill, /本文件是默认规则、解释、句式族和例子的唯一来源/u);
-  assert.match(operations, /single source of truth for default Chinese rules, explanations, phrase lists, and examples/u);
+  assert.match(operations, /`SKILL\.md` is the complete default Chinese skill/u);
+  assert.match(operations, /new `skill-customized\.md` is a complete standalone copy of the skill/u);
   assert.doesNotMatch(`${skill}\n${operations}\n${readme}\n${agents}`, /references\/patterns-and-examples\.md/u);
 });
 

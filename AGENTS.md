@@ -6,13 +6,13 @@ Guidance for agents maintaining this skill folder.
 
 This is a portable Simplified Chinese writing skill for drafting, editing, rewriting, polishing, and reviewing prose without common Chinese AI-writing tells.
 
-`SKILL.md` is the permanent runtime controller and the single source of truth for default rules, explanations, phrase lists, and examples. Keep its load and delivery gates near the top and its EOF marker at the end.
+`SKILL.md` is the complete default skill and the single source of truth for default rules, explanations, phrase lists, and examples. Keep its load and delivery gates near the top and its EOF marker at the end.
 
 There is no package installation or build step. Scripts use Node.js standard-library modules only.
 
 ## Key files
 
-- `SKILL.md`: metadata, permanent controller, complete default rules, explanations, phrase lists, and examples.
+- `SKILL.md`: metadata, operating instructions, complete default rules, explanations, phrase lists, and examples.
 - `scripts/print-active-rules.mjs`: deterministic full-skill loading, chunking, checksum validation, and preference resolution.
 - `scripts/check-final.mjs`: active-rule verification, candidate transport checks, word bounds, and final receipt.
 - `scripts/scan-writing.mjs`: deterministic Chinese mechanical and candidate checks. It cannot judge meaning or truth.
@@ -20,7 +20,7 @@ There is no package installation or build step. Scripts use Node.js standard-lib
 - `operations/kit-operations.md`: loading, customization, reset, additions, maintenance, and fixed replies.
 - `README.md`: public manual.
 - `agents/openai.yaml`: optional interface metadata.
-- `skill-customized.md`: local preferences. Never commit, overwrite, or silently migrate it.
+- `skill-customized.md`: a complete standalone customized skill created locally on request. Never commit, overwrite, or silently migrate it.
 
 ## Ownership
 
@@ -32,7 +32,7 @@ Change the smallest applicable layer, then synchronize affected layers:
 - Customization, reset, and fixed replies belong in operations.
 - Public behavior belongs in README.
 
-The controller remains active when a custom file exists. A compact custom file replaces Sections 1 through 7 and supplements them with Section 8. Legacy custom files remain supported as preference layers.
+A new V2 `skill-customized.md` is the only active skill source and contains the operating instructions plus all eight writing sections. Older compact and legacy files remain supported as preference layers over `SKILL.md`.
 
 ## Rule editing
 
@@ -46,12 +46,12 @@ Send every normal add-rule, remember-rule, or save-rule request to `skill-custom
 
 Before finishing a change:
 
-1. Confirm EOF markers in SKILL, operations, and compact custom fixtures.
+1. Confirm EOF markers in SKILL, operations, standalone custom, and older compact custom fixtures.
 2. Confirm `SKILL.md` remains the complete source for public rules, explanations, phrase lists, and examples.
 3. Run `node --check scripts/*.mjs`.
 4. Run `node --test tests/*.test.mjs`.
-5. Test default, whitespace-only, compact, malformed, legacy, and chunked custom files.
-6. Verify the custom template contains all eight numbered sections and no controller text.
+5. Test default, whitespace-only, standalone, malformed standalone and compact, older compact, legacy, and chunked custom files.
+6. Verify the custom template preserves valid YAML metadata and contains the operating instructions, maintenance section, all eight numbered sections, and the skill EOF marker.
 7. Test Chinese punctuation, stock openings and closings, false contrast, majority hooks, vocabulary, rhythm, code masking, Chinese length bounds, and the final receipt.
 8. Keep README and operations aligned with actual behavior.
 9. Never claim a local PASS receipt proves equality with a later assistant message.

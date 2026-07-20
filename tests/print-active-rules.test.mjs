@@ -6,6 +6,10 @@ import path from 'node:path';
 
 import {
   ACTIVE_RULES_MARKER,
+  CUSTOM_EOF_MARKER,
+  CUSTOM_FORMAT_MARKER,
+  CUSTOM_FULL_FORMAT_MARKER,
+  SKILL_MARKER,
   activeRulesSha256,
   buildActiveRules,
   buildCustomTemplate,
@@ -17,7 +21,7 @@ function fixture(t) {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'aaw-zh-rules-'));
   t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
   const sections = Array.from({ length: 7 }, (_, index) => `## ${index + 1}. 第${index + 1}节\n\n默认规则 ${index + 1}。`).join('\n\n');
-  fs.writeFileSync(path.join(directory, 'SKILL.md'), `# 控制器\n\n${sections}\n\n## 维护\n\n维护路由。\n\n## 8. 用户额外偏好\n\n个人偏好。\n\n<!-- ANTI_AI_WRITING_SKILL_EOF -->\n`);
+  fs.writeFileSync(path.join(directory, 'SKILL.md'), `---\nname: test-zh-skill\ndescription: 测试。\n---\n\n# 控制器\n\n${sections}\n\n## 维护\n\n维护路由。\n\n## 8. 用户额外偏好\n\n个人偏好。\n\n<!-- ANTI_AI_WRITING_SKILL_EOF -->\n`);
   return directory;
 }
 
@@ -30,22 +34,63 @@ test('default active rules validate the controller', (t) => {
   assert.ok(output.endsWith(`${ACTIVE_RULES_MARKER}\n`));
 });
 
-test('custom template contains numbered rules but no controller blocks', (t) => {
+test('custom template is a complete standalone skill', (t) => {
   const output = buildCustomTemplate(fixture(t));
+  assert.ok(output.startsWith('---\n'));
+  assert.match(output, new RegExp(`^---\\n[\\s\\S]*?\\n---\\n${CUSTOM_FULL_FORMAT_MARKER}$`, 'mu'));
   for (let section = 1; section <= 8; section += 1) assert.match(output, new RegExp(`^## ${section}\\.`, 'mu'));
-  assert.doesNotMatch(output, /维护路由/u);
-  assert.doesNotMatch(output, /ANTI_AI_WRITING_SKILL_EOF/u);
-  assert.match(output, /ANTI_AI_WRITING_CUSTOM_EOF/u);
+  assert.match(output, /维护路由/u);
+  assert.ok(output.endsWith(`${SKILL_MARKER}\n`));
 });
 
-test('compact customized rules replace defaults', (t) => {
+test('standalone customized skill is the only active source', (t) => {
   const directory = fixture(t);
   const custom = buildCustomTemplate(directory).replace('默认规则 1。', '个人规则 1。');
   fs.writeFileSync(path.join(directory, 'skill-customized.md'), custom);
   const output = buildActiveRules(directory);
+  assert.match(output, /active_source=skill-customized\.md/u);
   assert.match(output, /个人规则 1。/u);
-  assert.match(output, /默认规则 1。/u);
+  assert.doesNotMatch(output, /默认规则 1。/u);
+  assert.doesNotMatch(output, /<!-- ANTI_AI_SKILL_BEGIN -->/u);
+  assert.match(output, /Do not load default SKILL\.md rules in addition/u);
+});
+
+test('create, customize, and reset lifecycle switches the active source cleanly', (t) => {
+  const directory = fixture(t);
+  const customPath = path.join(directory, 'skill-customized.md');
+
+  assert.match(buildActiveRules(directory), /active_source=SKILL\.md/u);
+
+  const custom = buildCustomTemplate(directory)
+    .replace('个人偏好。', '不要把“万能钥匙”当作收尾金句。');
+  fs.writeFileSync(customPath, custom);
+  const customized = buildActiveRules(directory);
+  assert.match(customized, /active_source=skill-customized\.md/u);
+  assert.match(customized, /不要把“万能钥匙”当作收尾金句。/u);
+  assert.doesNotMatch(customized, /<!-- ANTI_AI_SKILL_BEGIN -->/u);
+
+  fs.rmSync(customPath);
+  const reset = buildActiveRules(directory);
+  assert.match(reset, /active_source=SKILL\.md/u);
+  assert.match(reset, /个人偏好。/u);
+  assert.doesNotMatch(reset, /不要把“万能钥匙”当作收尾金句。/u);
+});
+
+test('incomplete standalone custom fails closed instead of falling back', (t) => {
+  const directory = fixture(t);
+  const customPath = path.join(directory, 'skill-customized.md');
+  fs.writeFileSync(customPath, buildCustomTemplate(directory).replace(SKILL_MARKER, ''));
+  assert.throws(() => buildActiveRules(directory), /standalone skill-customized\.md is incomplete/u);
+});
+
+test('older compact customized rules remain supported', (t) => {
+  const directory = fixture(t);
+  const custom = `${CUSTOM_FORMAT_MARKER}\n\n${Array.from({ length: 8 }, (_, index) => `## ${index + 1}. 规则\n\n个人规则 ${index + 1}。`).join('\n\n')}\n\n${CUSTOM_EOF_MARKER}\n`;
+  fs.writeFileSync(path.join(directory, 'skill-customized.md'), custom);
+  const output = buildActiveRules(directory);
+  assert.match(output, /active_source=SKILL\.md/u);
   assert.match(output, /Compact customized Sections 1 through 7 replace the defaults/u);
+  assert.match(output, /个人规则 8。/u);
 });
 
 test('whitespace-only customized file is treated as absent', (t) => {

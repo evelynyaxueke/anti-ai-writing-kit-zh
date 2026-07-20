@@ -11,10 +11,10 @@ description: "Write, edit, rewrite, polish, or review Simplified Chinese prose w
 
 1. 使用运行时提供的准确 skill 路径，不要猜测或插入其他目录。
 2. 起草前先读本加载流程。
-3. 有 Node.js 时，运行 `node <skill-dir>/scripts/print-active-rules.mjs`。它会用经过校验的分块输出完整 `SKILL.md` 和当前定制规则。记住清单中的 SHA-256，严格按顺序把每条 `--chunk` 命令作为单独的工具调用执行。不要用循环、管道、批处理、复合命令、并行调用或一次工具调用执行多个分块。每次都确认该块的开头、结尾和相同摘要；最后一块必须以 active-rules EOF 结束。读完最后一块前不要起草。
-4. 没有 Node.js 时，分段连续读取本文件，直到末尾的 skill EOF 标记，再手动检查 `skill-customized.md`。非空的新格式文件要读到 custom EOF；旧格式文件要先取得总行数，再连续读到物理文件末尾。没有定制文件时，使用下方默认规则。
-5. 本文件中的控制流程始终有效。非空的新格式定制文件替换第 1 至第 7 节，其第 8 节作为补充。
-6. 没有格式标记的旧定制文件仍作为偏好层使用，但其中与本控制流程冲突的加载或操作说明无效。
+3. 有 Node.js 时，运行 `node <skill-dir>/scripts/print-active-rules.mjs`。它只输出一个完整的当前技能：存在 V2 独立定制文件时输出 `skill-customized.md`，否则输出 `SKILL.md` 并兼容旧定制文件。记住清单中的 SHA-256，严格按顺序把每条 `--chunk` 命令作为单独的工具调用执行。不要用循环、管道、批处理、复合命令、并行调用或一次工具调用执行多个分块。每次都确认该块的开头、结尾和相同摘要；最后一块必须以 active-rules EOF 结束。读完最后一块前不要起草。
+4. 没有 Node.js 时，先检查 `skill-customized.md`。如果 YAML 头之后的第一条非空行是 `<!-- ANTI_AI_WRITING_CUSTOM_FULL_V2 -->`，读到其末尾的 skill EOF 标记，并只使用这个文件。否则，读完本文件，再按旧格式应用 compact 或 legacy 定制文件。
+5. V2 定制文件包含完整操作说明和八个写作规则章节。不要再叠加本文件的默认写作规则。
+6. 旧 compact 和 legacy 定制文件继续作为本文件的偏好层使用。
 7. 不要覆盖或静默迁移已有定制文件。
 8. 定制不能删除加载流程、事实保真、交付检查、语义检查或只发送成稿的要求。
 
