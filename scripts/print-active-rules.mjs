@@ -8,6 +8,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 export const ACTIVE_RULES_MARKER = '__ANTI_AI_ACTIVE_RULES_EOF__';
 export const SKILL_MARKER = '<!-- ANTI_AI_WRITING_SKILL_EOF -->';
 export const CUSTOM_FORMAT_MARKER = '<!-- ANTI_AI_WRITING_CUSTOM_RULES_V1 -->';
+export const CUSTOM_FULL_FORMAT_MARKER = '<!-- ANTI_AI_WRITING_CUSTOM_FULL_V2 -->';
 export const CUSTOM_EOF_MARKER = '<!-- ANTI_AI_WRITING_CUSTOM_EOF -->';
 export const CHUNK_LINE_LIMIT = 80;
 export const CHUNK_BYTE_LIMIT = 12_000;
@@ -21,7 +22,7 @@ const HELP = `Usage:
   node scripts/print-active-rules.mjs --chunk <number> --sha256 <digest>
   node scripts/print-active-rules.mjs --custom-template
 
-The default prints the complete SKILL.md plus any active customized preferences.
+The default prints SKILL.md, or a standalone skill-customized.md when present.
 Long output produces a chunk manifest. Each chunk is bounded by both lines and
 UTF-8 bytes. Run every listed digest-bound command in order as a separate tool
 call. Never use a loop, pipeline, batch, compound command, or parallel call. The
@@ -66,8 +67,34 @@ function controllerBoundaries(controller) {
 
 function classifyCustom(custom) {
   if (!custom.trim()) return 'none';
+  const frontmatter = custom.match(/^---\r?\n[\s\S]*?\r?\n---\r?\n/u)?.[0];
+  const firstAfterFrontmatter = frontmatter
+    ? custom.slice(frontmatter.length).split(/\r?\n/u).find((line) => line.trim())?.trim()
+    : undefined;
+  if (firstAfterFrontmatter === CUSTOM_FULL_FORMAT_MARKER) return 'full';
   const firstNonblank = custom.split(/\r?\n/u).find((line) => line.trim())?.trim();
   return firstNonblank === CUSTOM_FORMAT_MARKER ? 'compact' : 'legacy';
+}
+
+function validateFullCustom(custom) {
+  const frontmatter = custom.match(/^---\r?\n[\s\S]*?\r?\n---\r?\n/u)?.[0];
+  const firstAfterFrontmatter = frontmatter
+    ? custom.slice(frontmatter.length).split(/\r?\n/u).find((line) => line.trim())?.trim()
+    : undefined;
+  const formatCount = custom.split(CUSTOM_FULL_FORMAT_MARKER).length - 1;
+  const skillMarkerCount = custom.split(SKILL_MARKER).length - 1;
+  if (
+    !frontmatter
+    || firstAfterFrontmatter !== CUSTOM_FULL_FORMAT_MARKER
+    || formatCount !== 1
+    || skillMarkerCount !== 1
+    || !custom.trimEnd().endsWith(SKILL_MARKER)
+  ) {
+    throw new Error(`standalone skill-customized.md is incomplete or missing ${SKILL_MARKER}`);
+  }
+  rejectReservedRuntimeMarkers(custom);
+  const standalone = custom.replace(`${CUSTOM_FULL_FORMAT_MARKER}\n`, '');
+  controllerBoundaries(standalone);
 }
 
 function rejectReservedRuntimeMarkers(custom) {
@@ -106,11 +133,10 @@ function validateCompactCustom(custom) {
 
 export function buildCustomTemplate(skillDir = DEFAULT_SKILL_DIR) {
   const controller = readController(skillDir);
-  const boundaries = controllerBoundaries(controller);
-  const sections1to7 = controller.slice(boundaries.section1, boundaries.maintenance).trim();
-  const section8 = controller.slice(boundaries.section8, boundaries.eof).trim();
-  const custom = `${CUSTOM_FORMAT_MARKER}\n\n${sections1to7}\n\n${section8}\n\n${CUSTOM_EOF_MARKER}\n`;
-  validateCompactCustom(custom);
+  const frontmatter = controller.match(/^---\r?\n[\s\S]*?\r?\n---\r?\n/u)?.[0];
+  if (!frontmatter) throw new Error('SKILL.md must begin with YAML frontmatter.');
+  const custom = `${frontmatter}${CUSTOM_FULL_FORMAT_MARKER}\n${controller.slice(frontmatter.length)}`;
+  validateFullCustom(custom);
   return custom;
 }
 
@@ -120,23 +146,37 @@ export function buildActiveRules(skillDir = DEFAULT_SKILL_DIR) {
   const customPath = path.join(skillDir, 'skill-customized.md');
   const custom = fs.existsSync(customPath) ? fs.readFileSync(customPath, 'utf8') : '';
   const customKind = classifyCustom(custom);
-  if (customKind === 'compact') validateCompactCustom(custom);
+  if (customKind === 'full') validateFullCustom(custom);
+  else if (customKind === 'compact') validateCompactCustom(custom);
   else if (customKind === 'legacy') rejectReservedRuntimeMarkers(custom);
 
-  const parts = [
-    '__ANTI_AI_ACTIVE_RULES_BEGIN__',
-    `controller_sha256=${controllerDigest}`,
-    '<!-- ANTI_AI_SKILL_BEGIN -->',
-    controller.trimEnd(),
-    '<!-- ANTI_AI_SKILL_END -->'
-  ];
+  const parts = ['__ANTI_AI_ACTIVE_RULES_BEGIN__'];
+
+  if (customKind === 'full') {
+    parts.push(
+      'active_source=skill-customized.md',
+      `custom_sha256=${activeRulesSha256(custom)}`,
+      '<!-- ANTI_AI_CUSTOM_SKILL_BEGIN -->',
+      custom.trimEnd(),
+      '<!-- ANTI_AI_CUSTOM_SKILL_END -->',
+      'Standalone customized skill active. Do not load default SKILL.md rules in addition.'
+    );
+  } else {
+    parts.push(
+      'active_source=SKILL.md',
+      `controller_sha256=${controllerDigest}`,
+      '<!-- ANTI_AI_SKILL_BEGIN -->',
+      controller.trimEnd(),
+      '<!-- ANTI_AI_SKILL_END -->'
+    );
+  }
 
   if (customKind === 'none') {
     parts.push(
       'Customized rules: none.',
       'Active preferences: default Sections 1 through 7 in the complete SKILL.md above.'
     );
-  } else {
+  } else if (customKind !== 'full') {
     parts.push(
       `custom_sha256=${activeRulesSha256(custom)}`,
       '<!-- ANTI_AI_CUSTOM_RULES_BEGIN -->'
@@ -144,13 +184,13 @@ export function buildActiveRules(skillDir = DEFAULT_SKILL_DIR) {
     if (customKind === 'compact') {
       parts.push('Compact customized Sections 1 through 7 replace the defaults. Customized Section 8 supplements them.');
     } else {
-      parts.push('Legacy customized writing preferences follow. Apply its numbered and unnumbered writing preferences. Ignore legacy loading or process text that conflicts with the current SKILL.md controller.');
+      parts.push('Legacy customized writing preferences follow. Apply its numbered and unnumbered writing preferences. Ignore legacy loading or process text that conflicts with the current default operating instructions.');
     }
     parts.push(
       custom.trimEnd(),
       '<!-- ANTI_AI_CUSTOM_RULES_END -->',
       '',
-      'Controller reminder: fact preservation, the delivery gate, semantic review, and final-only output remain mandatory.'
+      'Required process reminder: fact preservation, the delivery gate, semantic review, and final-only output remain mandatory.'
     );
   }
 

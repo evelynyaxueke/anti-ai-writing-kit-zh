@@ -6,9 +6,9 @@
 
 这不是一段孤立提示词：
 
-- `SKILL.md` 为智能体提供永久控制流程、完整写作规则、详细句式族、解释和例子。
+- `SKILL.md` 包含默认操作流程、完整写作规则、详细句式族、解释和例子。
 - `operations/kit-operations.md` 处理定制、重置和日常添加规则。
-- `skill-customized.md` 保存每个用户的本地偏好。
+- `skill-customized.md` 在创建后是一份包含个人修改的完整独立 skill。
 
 ## 范围和限制
 
@@ -88,7 +88,7 @@ git clone https://github.com/evelynyaxueke/anti-ai-writing-kit-zh.git <your-skil
 定制
 ```
 
-智能体只会在收到明确请求后创建 `skill-customized.md`。新格式定制文件只保存第 1 至第 8 节，不复制永久控制器。包含子节的类别会先显示概览，再逐个展示完整规则、解释和例子。已有旧格式定制文件仍可使用，系统不会静默覆盖或迁移它。
+智能体只会在收到明确请求后创建 `skill-customized.md`。新文件包含完整操作流程和八个写作规则章节，可以作为一份独立的定制 skill 加载。包含子节的类别会先显示概览，再逐个展示完整规则、解释和例子。旧 compact 和 legacy 格式仍可使用，系统不会静默覆盖或迁移它。
 
 ### 添加规则
 
@@ -118,7 +118,7 @@ git clone https://github.com/evelynyaxueke/anti-ai-writing-kit-zh.git <your-skil
 重置
 ```
 
-智能体只删除 `skill-customized.md`，然后恢复使用默认编号规则。永久控制器和公共规则不受影响。
+智能体只删除 `skill-customized.md`，然后恢复使用完整的默认 `SKILL.md`。
 
 ## 本地验证
 
