@@ -76,13 +76,17 @@ function classifyCustom(custom) {
   return firstNonblank === CUSTOM_FORMAT_MARKER ? 'compact' : 'legacy';
 }
 
+function countStandaloneMarker(text, marker) {
+  return text.split(/\r?\n/u).filter((line) => line.trim() === marker).length;
+}
+
 function validateFullCustom(custom) {
   const frontmatter = custom.match(/^---\r?\n[\s\S]*?\r?\n---\r?\n/u)?.[0];
   const firstAfterFrontmatter = frontmatter
     ? custom.slice(frontmatter.length).split(/\r?\n/u).find((line) => line.trim())?.trim()
     : undefined;
-  const formatCount = custom.split(CUSTOM_FULL_FORMAT_MARKER).length - 1;
-  const skillMarkerCount = custom.split(SKILL_MARKER).length - 1;
+  const formatCount = countStandaloneMarker(custom, CUSTOM_FULL_FORMAT_MARKER);
+  const skillMarkerCount = countStandaloneMarker(custom, SKILL_MARKER);
   if (
     !frontmatter
     || firstAfterFrontmatter !== CUSTOM_FULL_FORMAT_MARKER
@@ -105,8 +109,8 @@ function rejectReservedRuntimeMarkers(custom) {
 
 function validateCompactCustom(custom) {
   const firstNonblank = custom.split(/\r?\n/u).find((line) => line.trim())?.trim();
-  const formatCount = custom.split(CUSTOM_FORMAT_MARKER).length - 1;
-  const eofCount = custom.split(CUSTOM_EOF_MARKER).length - 1;
+  const formatCount = countStandaloneMarker(custom, CUSTOM_FORMAT_MARKER);
+  const eofCount = countStandaloneMarker(custom, CUSTOM_EOF_MARKER);
   if (
     firstNonblank !== CUSTOM_FORMAT_MARKER
     || formatCount !== 1

@@ -8,7 +8,22 @@
 
 - `SKILL.md` 包含默认操作流程、完整写作规则、详细句式族、解释和例子。
 - `operations/kit-operations.md` 处理定制、重置和日常添加规则。
-- `skill-customized.md` 在创建后是一份包含个人修改的完整独立 skill。
+- `skill-customized.md` 在创建后是一份包含加载流程、交付检查、八个规则章节和个人修改的完整独立 skill。
+
+## 测试报告
+
+我们使用相同的提示、模型设置和评价方法，比较了中文去 AI 味写作套件、[Humanizer-zh](https://github.com/op7418/Humanizer-zh)、[renwei-writing](https://github.com/orange2ai/renwei-writing) 和无技能条件。全部生成使用 `gpt-5.6-sol` 和 medium 推理强度。
+
+AI 味词语覆盖率越低越好。
+
+| 条件 | 第一阶段 | 第二阶段 | 综合 |
+|---|---:|---:|---:|
+| 中文去 AI 味写作套件 | 0.03% | 0.19% | 0.11% |
+| renwei-writing | 1.84% | 1.44% | 1.65% |
+| Humanizer-zh | 1.48% | 2.42% | 1.91% |
+| 不使用写作技能 | 2.22% | 4.85% | 3.39% |
+
+这份报告检查套件的写作效果和加载完整性。结果适用于本轮冻结版本、提示和模型，不构成固定排名。完整结果、方法、16 个提示、256 篇输出和逐篇证据都收录在[完整报告](reports/2026-07-20-chinese-anti-ai-writing-skills-comparison-report.md)中。
 
 ## 范围和限制
 
@@ -88,7 +103,7 @@ git clone https://github.com/evelynyaxueke/anti-ai-writing-kit-zh.git <your-skil
 定制
 ```
 
-智能体只会在收到明确请求后创建 `skill-customized.md`。新文件包含完整操作流程和八个写作规则章节，可以作为一份独立的定制 skill 加载。包含子节的类别会先显示概览，再逐个展示完整规则、解释和例子。旧 compact 和 legacy 格式仍可使用，系统不会静默覆盖或迁移它。
+智能体只会在收到明确请求后创建 `skill-customized.md`。新文件包含完整加载流程、交付检查和八个写作规则章节，可以作为唯一的写作规则来源独立加载。定制、添加规则和重置等操作仍由 `operations/kit-operations.md` 统一处理。包含子节的类别会先显示概览，再逐个展示完整规则、解释和例子。旧 compact 和 legacy 格式仍可使用，系统不会静默覆盖或迁移它。
 
 ### 添加规则
 
@@ -145,6 +160,7 @@ anti-ai-writing-kit-zh/
 ├── LICENSE
 ├── agents/
 ├── operations/
+├── reports/
 ├── scripts/
 └── tests/
 ```
